@@ -33,6 +33,24 @@ export default function Dashboard() {
     carregarClientes();
   }, []);
 
+  const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja deletar este cliente? Esta ação é irreversível.",
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      await clienteService.delete(id);
+      setClientes((prev) => prev.filter((c) => c.id !== id));
+    } catch {
+      setErro("Não foi possível deletar o cliente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     authService.logout();
     navigate("/login", { replace: true });
@@ -91,6 +109,9 @@ export default function Dashboard() {
                   <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Contato Principal
                   </th>
+                  <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Email
+                  </th>
                   {isAdmin && <th className="relative px-6 py-3.5"></th>}
                 </tr>
               </thead>
@@ -98,7 +119,7 @@ export default function Dashboard() {
                 {!clientes || clientes.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={isAdmin ? 6 : 5}
                       className="px-6 py-10 text-center text-sm text-gray-500"
                     >
                       Nenhum cliente cadastrado até ao momento.
@@ -132,16 +153,27 @@ export default function Dashboard() {
                           ? `${cliente.telefones[0].numero} (${cliente.telefones[0].tipo})`
                           : cliente.emails?.[0] || "N/A"}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {cliente.emails?.[0] || "N/A"}
+                      </td>
                       {isAdmin && (
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() =>
-                              navigate(`/clientes/editar/${cliente.id}`)
-                            }
-                            className="text-blue-600 hover:text-blue-900 font-semibold"
-                          >
-                            Editar
-                          </button>
+                          <div className="flex items-center justify-end gap-4">
+                            <button
+                              onClick={() =>
+                                navigate(`/clientes/editar/${cliente.id}`)
+                              }
+                              className="text-blue-600 hover:text-blue-900 font-semibold"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleDelete(cliente.id)}
+                              className="text-red-600 hover:text-red-900 font-semibold"
+                            >
+                              Deletar
+                            </button>
+                          </div>
                         </td>
                       )}
                     </tr>
